@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { calcTotal } from '@/lib/supabase'
+import { calcTotal } from '@/lib/pricing'
 
 export default function GalleryClient({ event, photos }: any) {
   const [cart, setCart] = useState<string[]>([])
