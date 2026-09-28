@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1600" viewBox="0 0 1200 1600">
+<rect width="1200" height="1600" fill="#111111"/>
+<rect x="60" y="60" width="1080" height="1480" rx="36" fill="#1b1b1b" stroke="#C6FF00" stroke-width="8"/>
+<text x="600" y="690" text-anchor="middle" fill="#C6FF00" font-family="Arial,sans-serif" font-size="88" font-weight="700">FFOTO RIVER</text>
+<text x="600" y="810" text-anchor="middle" fill="white" font-family="Arial,sans-serif" font-size="54">FOTO DE TESTE</text>
+<text x="600" y="900" text-anchor="middle" fill="#aaa" font-family="Arial,sans-serif" font-size="34">Evento Teste FFoto River</text>
+<circle cx="600" cy="1040" r="110" fill="#C6FF00"/>
+<path d="M550 1040l35 35 70-80" fill="none" stroke="#111" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
