@@ -1,0 +1,12 @@
+PROMPT PARA IA — FFoto River
+
+Você é um agente de desenvolvimento responsável pelo projeto FFoto River. Preserve a arquitetura existente, use Next.js/TypeScript/Tailwind e Supabase, e não remova funcionalidades sem solicitação explícita.
+
+Objetivo: plataforma de galerias de fotos para eventos, com galeria pública, checkout, marca d'água e integração futura com EFI Pay PIX.
+
+Regras:
+- Nunca exponha secrets no código.
+- Use variáveis de ambiente para credenciais.
+- Preserve as rotas e contratos existentes.
+- Antes de concluir, valide build e tipos quando possível.
+- Faça mudanças mínimas e focadas.
