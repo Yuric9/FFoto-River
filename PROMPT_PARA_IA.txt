@@ -1,12 +1,69 @@
-PROMPT PARA IA — FFoto River
+COPIE TUDO ABAIXO E MANDE PARA SUA IA (Cursor, Claude, v0, Lovable, etc):
 
-Você é um agente de desenvolvimento responsável pelo projeto FFoto River. Preserve a arquitetura existente, use Next.js/TypeScript/Tailwind e Supabase, e não remova funcionalidades sem solicitação explícita.
+---
+Você é um engenheiro sênior Full-Stack especialista em Next.js + Supabase.
 
-Objetivo: plataforma de galerias de fotos para eventos, com galeria pública, checkout, marca d'água e integração futura com EFI Pay PIX.
+OBJETIVO: Subir o projeto FFoto River que está neste ZIP.
 
-Regras:
-- Nunca exponha secrets no código.
-- Use variáveis de ambiente para credenciais.
-- Preserve as rotas e contratos existentes.
-- Antes de concluir, valide build e tipos quando possível.
-- Faça mudanças mínimas e focadas.
+O QUE É FFoto River:
+Plataforma própria de venda de fotos esportivas. Fotógrafo sobe evento com 300 fotos, cliente acessa via link /e/[slug], seleciona fotos, paga via PIX (EFI Pay) e recebe link de download automático em alta sem marca d'água.
+
+O QUE JÁ TEM NO ZIP:
+- Estrutura Next.js 14 App Router completa
+- SQL completo em supabase/migrations/001_initial.sql
+- Edge Function esqueleto em supabase/functions/process-photo
+- Libs de Supabase e cálculo de preço com pacote
+- Galeria com lazy loading e marca d'água CSS
+- .env.example
+
+O QUE VOCÊ PRECISA FAZER AGORA:
+
+1. npm install e criar tailwind.config.js (npx tailwindcss init -p) com content: ["./app/**/*.{js,ts,jsx,tsx}"]
+
+2. Implementar app/checkout/page.tsx:
+   - Ler query params ?event= &photos=
+   - Form com Nome, Email, WhatsApp (validação simples)
+   - Ao submit: POST para /api/checkout que cria order em Supabase + gera PIX na EFI Pay (use lib/payments.ts)
+   - Redireciona para /checkout/[orderId] mostrando QR Code
+
+3. Implementar app/api/checkout/route.ts:
+   - Recebe { event_id, photo_ids, customer }
+   - Calcula total com regra pack
+   - Insere em orders e order_items
+   - Chama createPixCharge e salva pix_txid e pix_qrcode
+   - Retorna orderId
+
+4. Implementar app/checkout/[orderId]/page.tsx:
+   - Mostra QR Code + Copia e Cola
+   - Usa Supabase Realtime para ouvir mudança de status para 'paid'
+   - Quando paid, redireciona para /entrega/[token]
+
+5. Implementar app/api/webhooks/efi/route.ts:
+   - Recebe webhook da EFI Pay
+   - Valida e atualiza orders.status = 'paid', paid_at = now()
+   - Dispara email (pode usar console.log no MVP)
+
+6. Implementar app/entrega/[token]/page.tsx:
+   - Busca order por download_token
+   - Se status != paid, mostra "pagamento pendente"
+   - Se paid, lista fotos e gera signed URLs de 24h do bucket 'originais' via supabaseAdmin.storage.from('originais').createSignedUrl
+   - Botão "Baixar Todas" que gera ZIP no client (use JSZip)
+
+7. Implementar app/admin/page.tsx:
+   - Login com Supabase Auth
+   - Form criar evento (title, slug, date, preços)
+   - Upload em massa: input multiple que sobe para storage 'originais' e chama a Edge Function ou insere direto em photos
+   - Lista eventos com link público e QR Code
+
+8. Estilização:
+   - Use Tailwind, fundo #0A0A0A, accent #C6FF00, texto branco
+   - Mobile-first, PWA: crie app/manifest.ts
+
+CRITÉRIOS:
+- Código limpo, comentado em PT-BR
+- Trate erros
+- Não invente bibliotecas, use só @supabase/supabase-js e next
+- Deixe TODO onde precisar de chave da EFI Pay
+
+Quando terminar, me dê as instruções de deploy na Vercel.
+---
