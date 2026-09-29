@@ -1,25 +1,13 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export default async function HomePage() {
-  let { data: events, error } = await supabase
+  const { data: events, error } = await supabaseAdmin
     .from('events')
     .select('id, slug, title, date, location')
     .eq('is_active', true)
     .order('date', { ascending: true })
-
-  // Em desenvolvimento, se a chave pública local estiver com problema,
-  // tenta a mesma leitura no cliente administrativo do servidor.
-  if (error && process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    const fallback = await supabaseAdmin
-      .from('events')
-      .select('id, slug, title, date, location')
-      .eq('is_active', true)
-      .order('date', { ascending: true })
-    events = fallback.data
-    error = fallback.error
-  }
 
   return (
     <main className="min-h-screen bg-[#0A0A0A]">
