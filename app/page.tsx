@@ -51,7 +51,10 @@ export default async function HomePage() {
 
           {error ? (
             <div className="mt-5 rounded-xl border border-red-400/20 bg-red-400/10 p-5 text-red-200">
-              Não foi possível carregar os eventos agora.
+              <p>Não foi possível carregar os eventos agora.</p>
+              {process.env.NODE_ENV !== 'production' && (
+                <pre className="mt-3 whitespace-pre-wrap text-xs text-red-300">{error.message}</pre>
+              )}
             </div>
           ) : !events?.length ? (
             <div className="mt-5 rounded-xl border border-white/10 bg-white/[0.03] p-8 text-white/60">
