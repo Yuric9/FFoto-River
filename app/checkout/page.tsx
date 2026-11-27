@@ -1,6 +1,7 @@
 'use client'
 import { Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import PixPayment from '@/components/PixPayment'
 
 export default function CheckoutPage() {
   return (
@@ -48,12 +49,20 @@ function CheckoutForm() {
   if (result) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center gap-4">
-        <h1 className="text-2xl font-black">Pedido criado! 🎉</h1>
-        <p className="text-zinc-400">Escaneie o QR Code no seu banco ou copie o código PIX abaixo para pagar.</p>
-        <div className="bg-white p-4 rounded-lg break-all text-black text-xs max-w-sm">{result.pix.copiaECola}</div>
-        <p className="text-sm text-zinc-500 max-w-sm">
-          Assim que o pagamento for confirmado, suas fotos estarão disponíveis em{' '}
-          <a href={`/entrega/${result.downloadToken}`} className="text-[#C6FF00] underline">este link</a>. Salve o link!
+        <h1 className="text-2xl font-black">Pague com PIX</h1>
+        <p className="text-zinc-400 max-w-sm">
+          Total: <strong className="text-white">R$ {Number(result.pix.valor).toFixed(2)}</strong>.
+          Escaneie o QR Code no app do seu banco ou copie o código.
+        </p>
+        <PixPayment
+          downloadToken={result.downloadToken}
+          copiaECola={result.pix.copiaECola}
+          qrcodeImage={result.pix.qrcodeImage}
+          simulado={result.pix.simulado}
+        />
+        <p className="text-xs text-zinc-500 max-w-sm">
+          Guarde este link para baixar suas fotos depois:{' '}
+          <a href={`/entrega/${result.downloadToken}`} className="text-[#C6FF00] underline break-all">/entrega/{result.downloadToken.slice(0, 8)}...</a>
         </p>
       </div>
     )

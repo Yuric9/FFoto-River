@@ -1,6 +1,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+
+// Sem isso o Next gera a home uma vez no build e eventos novos não aparecem.
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const { data: events, error } = await supabaseAdmin

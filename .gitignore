@@ -10,6 +10,8 @@
 # misc
 .DS_Store
 *.pem
+*.p12
+/certs/
 npm-debug.log*
 
 # local env files (NUNCA suba isso - tem chaves secretas)

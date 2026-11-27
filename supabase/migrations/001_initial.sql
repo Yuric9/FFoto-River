@@ -49,9 +49,8 @@ create table if not exists order_items (
   unique(order_id, photo_id)
 );
 
--- Storage buckets
-insert into storage.buckets (id, name, public) values ('originais', 'originais', false) on conflict (id) do nothing;
-insert into storage.buckets (id, name, public) values ('provas', 'provas', true) on conflict (id) do nothing;
+-- Arquivos (originais e prévias) ficam no Cloudflare R2, não no Supabase Storage.
+-- Veja lib/storage.ts e a seção "Fotos no Cloudflare R2" do README.
 
 -- RLS
 alter table events enable row level security;
