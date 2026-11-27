@@ -99,27 +99,49 @@ alter table orders add column platform_fee numeric(10,2);  -- comissão gravada 
 ### RLS: o coração da segurança
 
 ```sql
+-- Schema "private": não é exposto pela API do Supabase, então ninguém
+-- consegue chamar estas funções por /rest/v1/rpc.
+create schema if not exists private;
+
 -- Função auxiliar: o usuário logado é membro desta organização?
-create function is_org_member(org uuid) returns boolean
-language sql security definer stable set search_path = public as $$
+-- SECURITY DEFINER é necessário porque a própria tabela memberships tem RLS;
+-- por isso ela fica no schema private, confere auth.uid() por dentro
+-- e usa search_path vazio (todos os nomes com schema explícito).
+create function private.is_org_member(org uuid) returns boolean
+language sql security definer stable set search_path = '' as $$
   select exists (
-    select 1 from memberships
-    where org_id = org and user_id = auth.uid()
+    select 1 from public.memberships m
+    where m.org_id = org and m.user_id = (select auth.uid())
   );
 $$;
 
--- Fotógrafo gerencia só os eventos da própria organização
-create policy "membros gerenciam eventos" on events
-  for all using (is_org_member(org_id)) with check (is_org_member(org_id));
+-- Fotógrafo gerencia só os eventos da própria organização.
+-- "(select ...)" faz o Postgres calcular uma vez por consulta, não uma vez por linha.
+create policy "membros gerenciam eventos" on public.events
+  for all to authenticated
+  using ((select private.is_org_member(org_id)))
+  with check ((select private.is_org_member(org_id)));  -- impede mover o evento para outra org
 
 -- Comprador (anônimo) continua vendo eventos ativos
-create policy "público vê eventos ativos" on events
-  for select using (is_active = true);
+create policy "público vê eventos ativos" on public.events
+  for select to anon, authenticated using (is_active = true);
 
 -- Pedidos: o fotógrafo vê os da organização dele; o público não vê nada
-create policy "membros veem pedidos" on orders
-  for select using (is_org_member(org_id));
+create policy "membros veem pedidos" on public.orders
+  for select to authenticated using ((select private.is_org_member(org_id)));
+
+-- Índices nas colunas usadas pelo RLS (sem eles, cada consulta varre a tabela)
+create index on public.memberships (user_id, org_id);
+create index on public.events (org_id);
+create index on public.photos (org_id);
+create index on public.orders (org_id);
 ```
+
+> Regras tiradas da skill oficial `supabase/agent-skills` (veja a seção 9):
+> - Policy de UPDATE e de ALL sempre com `USING` **e** `WITH CHECK`.
+> - Sempre dizer o papel com `to authenticated` / `to anon`.
+> - Nunca usar `SECURITY DEFINER` para "resolver" um erro de permissão.
+> - Depois de cada migração, rodar os *advisors* de segurança do Supabase.
 
 **Regra de ouro:** depois do SaaS, o painel do fotógrafo **não usa mais a `service_role`**. Ele usa o cliente com a sessão do usuário logado, e o RLS faz o isolamento. A `service_role` fica só para o webhook, o checkout e a entrega, que não têm usuário logado.
 
@@ -246,7 +268,29 @@ Cada fase termina com algo **funcionando e testado**. Não começar a próxima s
 
 ---
 
-## 9. Decisões em aberto
+## 9. Skills de IA que ajudam neste projeto
+
+Skills oficiais avaliadas (do ecossistema [skills.sh](https://skills.sh/)):
+
+| Skill | De quem | Para qual fase |
+|---|---|---|
+| `supabase` | Supabase | Fase 1: Auth com `@supabase/ssr` no Next.js, RLS, Storage, CLI e migrações |
+| `supabase-postgres-best-practices` | Supabase | Fases 1 a 3: modelagem, índices, RLS rápido e testes de RLS |
+| `react-best-practices` | Vercel | Todas: performance de React e Next.js |
+| `deploy-to-vercel` | Vercel | Fase 0: colocar o site no ar |
+| `web-design-guidelines` | Vercel | Fase 1: revisar as telas novas (acessibilidade e UX) |
+
+Instalar no seu computador:
+
+```bash
+npx skills add supabase/agent-skills
+```
+
+```bash
+npx skills add vercel-labs/agent-skills
+```
+
+## 10. Decisões em aberto
 
 - [ ] **Gateway de split:** EFI ou Asaas? (testar os dois no sandbox)
 - [ ] **Comissão inicial:** 10%? 15%?
