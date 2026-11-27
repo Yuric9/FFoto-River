@@ -10,9 +10,9 @@ describe('links assinados do storage (R2)', async () => {
   const { presignUpload, presignDownload, BUCKET_ORIGINAIS } = await import('@/lib/storage')
 
   it('link de upload aponta para o bucket e arquivo certos e é assinado', async () => {
-    const url = new URL(await presignUpload('ffoto-provas', 'evento/abc-preview.jpg', 'image/jpeg'))
+    const url = new URL(await presignUpload('acheiminhaphoto-provas', 'evento/abc-preview.jpg', 'image/jpeg'))
     expect(url.host).toBe('conta-teste.r2.cloudflarestorage.com')
-    expect(url.pathname).toBe('/ffoto-provas/evento/abc-preview.jpg')
+    expect(url.pathname).toBe('/acheiminhaphoto-provas/evento/abc-preview.jpg')
     expect(url.searchParams.get('X-Amz-Signature')).toBeTruthy()
     expect(url.searchParams.get('X-Amz-Expires')).toBe('600')
     // o Content-Type faz parte da assinatura: o navegador não pode trocar o tipo

@@ -10,7 +10,7 @@ export default async function AdminPage() {
   return (
     <div className="min-h-screen p-6">
       <div className="flex items-center justify-between mb-6 max-w-2xl">
-        <h1 className="text-2xl font-black">Painel FFoto River</h1>
+        <h1 className="text-2xl font-black">Painel Achei Minha Photo</h1>
         <Link href="/admin/eventos/novo" className="bg-[#C6FF00] text-black font-bold px-4 py-2 rounded-full text-sm">
           + Novo evento
         </Link>

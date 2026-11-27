@@ -11,7 +11,7 @@ export default function GalleryClient({ event, photos }: any) {
   return (
     <>
       <header className="sticky top-0 z-10 bg-[#0A0A0A]/90 backdrop-blur p-4 flex justify-between items-center border-b border-zinc-800">
-        <h1 className="font-black tracking-widest">FFOTO RIVER • {event.title}</h1>
+        <h1 className="font-black tracking-widest">ACHEI MINHA PHOTO • {event.title}</h1>
         <div className="text-sm">{cart.length} fotos</div>
       </header>
       {/* pb-28: espaço para a barra fixa do carrinho não cobrir a última linha de fotos */}
@@ -19,9 +19,6 @@ export default function GalleryClient({ event, photos }: any) {
         {photos.map((p: any) => (
           <div key={p.id} className="relative aspect-[3/4] bg-zinc-900 overflow-hidden group">
             <img src={previewUrl(p.preview_path)} alt={`Prévia ${p.filename}`} className="w-full h-full object-cover" loading="lazy" />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="rotate-[-30deg] border-2 border-white/20 text-white/30 font-black p-2">PROVA - FFOTO RIVER</span>
-            </div>
             <button onClick={()=>toggle(p.id)} className={`absolute bottom-2 right-2 rounded-full px-3 py-1 text-sm font-bold ${cart.includes(p.id) ? 'bg-[#C6FF00] text-black' : 'bg-white text-black'}`}>
               {cart.includes(p.id) ? '✓' : '+'}
             </button>

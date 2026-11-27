@@ -56,7 +56,7 @@ export async function createPixCharge(orderId: string, amount: number): Promise<
       calendario: { expiracao: EXPIRACAO_SEGUNDOS },
       valor: { original: valor },
       chave: process.env.EFI_PIX_KEY,
-      solicitacaoPagador: 'Fotos FFoto River'
+      solicitacaoPagador: 'Fotos Achei Minha Photo'
     }
   })
 

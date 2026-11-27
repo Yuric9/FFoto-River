@@ -1,11 +1,11 @@
-# Planejamento: FFoto River como SaaS
+# Planejamento: Achei Minha Photo como SaaS
 
 > Documento vivo. Atualize conforme as decisões forem tomadas.
 > Última revisão: novembro de 2026.
 
 ## 1. A visão em uma frase
 
-Uma plataforma onde **qualquer fotógrafo de eventos** cria a própria conta, sobe as fotos, e vende por PIX com o dinheiro caindo **direto na conta dele**. A FFoto River fica com uma comissão por venda.
+Uma plataforma onde **qualquer fotógrafo de eventos** cria a própria conta, sobe as fotos, e vende por PIX com o dinheiro caindo **direto na conta dele**. O Achei Minha Photo fica com uma comissão por venda.
 
 ### Quem usa
 
@@ -94,7 +94,7 @@ alter table orders add column org_id uuid references organizations(id) not null;
 alter table orders add column platform_fee numeric(10,2);  -- comissão gravada no momento da venda
 ```
 
-> **Migração dos dados atuais:** criar uma organização "FFoto River" e preencher o `org_id` de todos os eventos, fotos e pedidos existentes com ela, **antes** de aplicar o `not null`.
+> **Migração dos dados atuais:** criar uma organização "Achei Minha Photo" e preencher o `org_id` de todos os eventos, fotos e pedidos existentes com ela, **antes** de aplicar o `not null`.
 
 ### RLS: o coração da segurança
 
@@ -165,7 +165,7 @@ O código atual usa **uma única conta EFI**, a do `.env` (`EFI_CLIENT_ID` e `EF
 Ana paga R$ 96,00 no PIX
         │
         ▼
-Conta EFI da FFoto River  ← recebe tudo
+Conta EFI do Achei Minha Photo  ← recebe tudo
         │
         ▼  (manual)
 Repasse da parte do João
@@ -175,7 +175,7 @@ Se o fotógrafo é o próprio dono da plataforma, isso é perfeito. Com outros f
 
 ### O problema
 
-Se todo o dinheiro cair na conta da FFoto River e você repassar depois aos fotógrafos, você vira um **intermediador financeiro**. Isso traz responsabilidade fiscal (o dinheiro entra como faturamento seu), risco de chargeback e trabalho manual de repasse. Não é o caminho para um projeto começando.
+Se todo o dinheiro cair na conta do Achei Minha Photo e você repassar depois aos fotógrafos, você vira um **intermediador financeiro**. Isso traz responsabilidade fiscal (o dinheiro entra como faturamento seu), risco de chargeback e trabalho manual de repasse. Não é o caminho para um projeto começando.
 
 ### A solução: split de pagamento
 
@@ -189,7 +189,7 @@ Ana paga R$ 96,00 no PIX
         │  divide na hora
    ┌────┴─────────────┐
    ▼                  ▼
-Conta do João     Conta da FFoto River
+Conta do João     Conta do Achei Minha Photo
 R$ 86,40 (90%)    R$ 9,60 (10% de comissão)
 ```
 
@@ -202,7 +202,7 @@ R$ 86,40 (90%)    R$ 9,60 (10% de comissão)
 
 ### Como o fotógrafo cria a conta de recebimento (modelo de subcontas, ex.: Asaas)
 
-1. João se cadastra na FFoto River.
+1. João se cadastra no Achei Minha Photo.
 2. No painel, em **"Configure seus recebimentos"**, ele informa nome, CPF/CNPJ e dados bancários.
 3. O sistema chama a API do gateway: "criar subconta para o João".
 4. O gateway verifica os documentos (o KYC fica com ele, não com a plataforma).
@@ -328,7 +328,7 @@ Cada fase termina com algo **funcionando e testado**. Não começar a próxima s
 ### Fase 4: Diferenciais
 - [ ] Busca por número de peito
 - [ ] Planos pagos (assinatura)
-- [ ] Domínio próprio ou subdomínio por fotógrafo (`joao.ffotoriver.com`)
+- [ ] Domínio próprio ou subdomínio por fotógrafo (`joao.acheiminhaphoto.com.br`)
 
 ---
 

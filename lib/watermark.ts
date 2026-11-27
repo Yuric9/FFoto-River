@@ -1,7 +1,7 @@
 // Gera uma versão com marca d'água repetida, direto no navegador (canvas), sem precisar de servidor extra, biblioteca externa ou Edge Function.
 // A prévia também é reduzida (lado maior com até `maxSize` px): fica leve para a galeria
 // e não serve como substituta da foto original em alta resolução.
-export async function applyWatermark(file: File, text = 'FFOTO RIVER', maxSize = 1600): Promise<Blob> {
+export async function applyWatermark(file: File, text = 'ACHEI MINHA PHOTO', maxSize = 1600): Promise<Blob> {
   const img = await loadImage(file)
   const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
   const canvas = document.createElement('canvas')
@@ -17,7 +17,7 @@ export async function applyWatermark(file: File, text = 'FFOTO RIVER', maxSize =
 
 // Desenha o texto repetido em diagonal, em "tijolinhos", cobrindo a foto inteira.
 // O espaçamento é calculado pela LARGURA REAL do texto: com um passo fixo
-// (ex.: 1/3 da largura da foto), as repetições se encostavam e viravam "RIVEROTO".
+// (ex.: 1/3 da largura da foto), as repetições se encostavam e se misturavam.
 export function drawWatermark(ctx: CanvasRenderingContext2D, width: number, height: number, text: string) {
   const fontSize = Math.max(14, Math.round(Math.min(width, height) / 14))
   ctx.save()
