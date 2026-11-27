@@ -31,7 +31,7 @@ As fotos originais ficam em um bucket **privado**. Só as prévias com marca d'�
 | Visual | Tailwind CSS |
 | Banco de dados e arquivos | Supabase (PostgreSQL e Storage) |
 | Pagamento | EFI Pay (PIX) |
-| Imagens | sharp |
+| Marca d'água | Canvas, no navegador |
 | Hospedagem prevista | Vercel |
 
 ## Como rodar no seu computador
@@ -42,7 +42,7 @@ Você precisa de Node.js 18 ou mais novo, uma conta no Supabase e uma conta de d
    ```bash
    npm install
    ```
-2. Crie um projeto no Supabase e rode o arquivo `supabase/migrations/001_initial.sql` no SQL Editor. Confira em Storage se existem os buckets `originais` (privado) e `provas` (público).
+2. Crie um projeto no Supabase e rode, em ordem, os arquivos de `supabase/migrations/` (`001_initial.sql`, depois `002_protect_sales_dashboard.sql`) no SQL Editor. Confira em Storage se existem os buckets `originais` (privado) e `provas` (público).
 3. Copie `.env.example` para `.env.local` e preencha com as chaves do Supabase e da EFI Pay. Troque também `ADMIN_USER` e `ADMIN_PASSWORD`.
 4. Rode o projeto:
    ```bash
