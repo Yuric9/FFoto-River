@@ -23,7 +23,7 @@ export function middleware(req: NextRequest) {
 
   return new NextResponse('Acesso restrito', {
     status: 401,
-    headers: { 'WWW-Authenticate': 'Basic realm="Admin FFoto River"' }
+    headers: { 'WWW-Authenticate': 'Basic realm="Admin Achei Minha Photo"' }
   })
 }
 

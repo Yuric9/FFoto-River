@@ -1,4 +1,4 @@
-# FFoto River
+# Achei Minha Photo
 
 Plataforma para fotógrafos venderem fotos online. O cliente vê as fotos com marca d'água, escolhe as que quer, paga por **PIX** no próprio site e recebe o link para baixar as originais.
 
@@ -52,8 +52,8 @@ Você precisa de Node.js 18 ou mais novo, uma conta no Supabase, uma na Cloudfla
 
 ### Fotos no Cloudflare R2
 
-1. No painel da Cloudflare, abra **R2** e crie dois buckets: `ffoto-originais` e `ffoto-provas`.
-2. Em `ffoto-provas` > **Settings** > **Public access**, ative o domínio público (`r2.dev`) ou ligue um domínio seu. Coloque esse endereço em `NEXT_PUBLIC_PREVIEWS_BASE_URL`. **Nunca** ative o acesso público no `ffoto-originais`.
+1. No painel da Cloudflare, abra **R2** e crie dois buckets: `acheiminhaphoto-originais` e `acheiminhaphoto-provas`.
+2. Em `acheiminhaphoto-provas` > **Settings** > **Public access**, ative o domínio público (`r2.dev`) ou ligue um domínio seu. Coloque esse endereço em `NEXT_PUBLIC_PREVIEWS_BASE_URL`. **Nunca** ative o acesso público no `acheiminhaphoto-originais`.
 3. Nos **dois** buckets, em **Settings** > **CORS policy**, cole a regra abaixo (troque pelo endereço do seu site). Sem ela, o navegador não consegue enviar as fotos:
    ```json
    [

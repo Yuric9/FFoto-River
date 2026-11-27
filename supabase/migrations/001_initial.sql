@@ -1,4 +1,4 @@
--- FFOTO RIVER - SCHEMA COMPLETO
+-- ACHEI MINHA PHOTO - SCHEMA COMPLETO
 create extension if not exists "uuid-ossp";
 
 create table if not exists events (

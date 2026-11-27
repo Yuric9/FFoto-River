@@ -9,8 +9,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 // - originais (PRIVADO): fotos em alta, só saem por link assinado depois do pagamento
 // - provas (PÚBLICO): prévias pequenas com marca d'água, exibidas na galeria
 
-export const BUCKET_ORIGINAIS = process.env.S3_BUCKET_ORIGINAIS || 'ffoto-originais'
-export const BUCKET_PROVAS = process.env.S3_BUCKET_PROVAS || 'ffoto-provas'
+export const BUCKET_ORIGINAIS = process.env.S3_BUCKET_ORIGINAIS || 'acheiminhaphoto-originais'
+export const BUCKET_PROVAS = process.env.S3_BUCKET_PROVAS || 'acheiminhaphoto-provas'
 
 let client: S3Client | null = null
 function s3() {

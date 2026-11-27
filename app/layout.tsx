@@ -1,5 +1,8 @@
 import './globals.css'
-export const metadata = { title: 'FFoto River', description: 'Venda de fotos esportivas' }
+export const metadata = {
+  title: 'Achei Minha Photo',
+  description: 'Encontre e compre suas fotos de corridas e eventos esportivos. Pagamento por PIX e download na hora.'
+}
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">

@@ -16,15 +16,18 @@ export default async function HomePage() {
     <main className="min-h-screen bg-[#0A0A0A]">
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center gap-3">
             <Image
-              src="/logo.png"
-              alt="FFoto River"
-              width={180}
-              height={60}
-              className="h-12 w-auto object-contain"
+              src="/logo-simbolo.png"
+              alt=""
+              width={44}
+              height={44}
+              className="h-11 w-11 object-contain"
               priority
             />
+            <span className="text-lg font-black leading-tight tracking-tight">
+              Achei Minha <span className="text-[#C6FF00]">Photo</span>
+            </span>
           </Link>
           <Link
             href="/admin"
@@ -38,7 +41,7 @@ export default async function HomePage() {
       <section className="mx-auto max-w-6xl px-6 py-16 sm:py-24">
         <div className="max-w-2xl">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-emerald-400">
-            FFoto River
+            Achei Minha Photo
           </p>
           <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
             Encontre suas fotos do evento.
@@ -94,7 +97,7 @@ export default async function HomePage() {
       </section>
 
       <footer className="border-t border-white/10 px-6 py-8 text-center text-sm text-white/40">
-        © {new Date().getFullYear()} FFoto River
+        © {new Date().getFullYear()} Achei Minha Photo
       </footer>
     </main>
   )
