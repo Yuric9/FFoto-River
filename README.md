@@ -76,6 +76,14 @@ curl -X POST "http://localhost:3000/api/webhooks/efi?hmac=SEU_SEGREDO" -H "Conte
 
 O `TXID_DO_PEDIDO` é o id do pedido sem os hífens (coluna `pix_txid` da tabela `orders`).
 
+### Testes
+
+```bash
+npm test
+```
+
+Os testes ficam em `tests/` e cobrem o cálculo de preço, a confirmação do pagamento e a segurança do webhook. Eles não usam o Supabase nem a EFI de verdade, então rodam sem nenhuma chave configurada. No GitHub, rodam sozinhos a cada push (aba **Actions**).
+
 Nunca envie o arquivo `.env.local` nem os certificados da EFI Pay para o GitHub.
 
 ## Estrutura
@@ -98,7 +106,6 @@ middleware.ts proteção do painel /admin
 ## Próximos passos
 
 - Publicar na Vercel
-- Testes automatizados para o fluxo de pagamento
 - Melhorar o painel de administração
 
 ## Autor
