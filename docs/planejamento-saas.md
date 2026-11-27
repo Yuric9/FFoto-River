@@ -153,6 +153,26 @@ Caminho dos arquivos: `originais/{org_id}/{event_id}/{uuid}.jpg`. O primeiro ped
 
 ## 4. Pagamentos: o ponto mais delicado
 
+### Exemplo usado nesta seção
+
+Na **Corrida do Rio 2026**, a atleta Ana compra **12 fotos** do fotógrafo **João**. Como passou de 10 fotos, vale o preço do pacote: R$ 8,00 por foto. **Total: R$ 96,00.**
+
+### Hoje (Fase 0): uma conta só
+
+O código atual usa **uma única conta EFI**, a do `.env` (`EFI_CLIENT_ID` e `EFI_PIX_KEY`).
+
+```
+Ana paga R$ 96,00 no PIX
+        │
+        ▼
+Conta EFI da FFoto River  ← recebe tudo
+        │
+        ▼  (manual)
+Repasse da parte do João
+```
+
+Se o fotógrafo é o próprio dono da plataforma, isso é perfeito. Com outros fotógrafos, serve só para testar com um ou dois parceiros de confiança.
+
 ### O problema
 
 Se todo o dinheiro cair na conta da FFoto River e você repassar depois aos fotógrafos, você vira um **intermediador financeiro**. Isso traz responsabilidade fiscal (o dinheiro entra como faturamento seu), risco de chargeback e trabalho manual de repasse. Não é o caminho para um projeto começando.
@@ -160,6 +180,61 @@ Se todo o dinheiro cair na conta da FFoto River e você repassar depois aos fot�
 ### A solução: split de pagamento
 
 O gateway divide o PIX no momento do pagamento: por exemplo, 90% vai direto para a conta do fotógrafo e 10% para a plataforma. Você nunca segura o dinheiro de terceiros.
+
+```
+Ana paga R$ 96,00 no PIX
+        │
+        ▼
+   Gateway (Asaas / EFI)
+        │  divide na hora
+   ┌────┴─────────────┐
+   ▼                  ▼
+Conta do João     Conta da FFoto River
+R$ 86,40 (90%)    R$ 9,60 (10% de comissão)
+```
+
+| | Valor |
+|---|---|
+| Ana paga | R$ 96,00 |
+| Comissão da plataforma (10%) | R$ 9,60 → conta da plataforma |
+| Parte do fotógrafo (90%) | R$ 86,40 → conta do João |
+| Taxa do gateway pelo PIX | descontada do fotógrafo **ou** absorvida pela plataforma (decisão em aberto) |
+
+### Como o fotógrafo cria a conta de recebimento (modelo de subcontas, ex.: Asaas)
+
+1. João se cadastra na FFoto River.
+2. No painel, em **"Configure seus recebimentos"**, ele informa nome, CPF/CNPJ e dados bancários.
+3. O sistema chama a API do gateway: "criar subconta para o João".
+4. O gateway verifica os documentos (o KYC fica com ele, não com a plataforma).
+5. O gateway devolve o id da carteira, que é guardado em `organizations.payout_account_id`.
+6. Com `payout_status = 'active'`, o João pode publicar eventos.
+
+Na EFI, cada fotógrafo precisa abrir a **própria conta EFI** e vinculá-la à plataforma: funciona, mas o cadastro dá mais trabalho para ele.
+
+### No código
+
+Hoje o checkout chama `createPixCharge(order.id, 96.00)`. Com o split, ele passa a dizer para quem vai cada parte:
+
+```ts
+createPixCharge(order.id, 96.00, {
+  split: [{ conta: org.payout_account_id, percentual: 90 }]
+  // o restante (10%) fica na conta da plataforma
+})
+```
+
+Cada pedido grava `platform_fee` (ex.: 9.60). Assim, o fotógrafo vê no painel "vendi R$ 96, recebi R$ 86,40" e a plataforma soma as comissões do mês.
+
+### Resumo
+
+| | Hoje (Fase 0) | SaaS (Fase 2) |
+|---|---|---|
+| Para onde vai o dinheiro | Tudo para a conta da plataforma | Dividido na hora: fotógrafo e plataforma |
+| Repasse ao fotógrafo | Manual | Automático, pelo gateway |
+| Imposto da plataforma sobre | O valor total | Só a comissão |
+| Nota fiscal | A plataforma, do total | O fotógrafo da venda, a plataforma da comissão |
+| Conta do fotógrafo | Não precisa | Subconta (Asaas) ou conta própria (EFI) |
+
+### Comparando os gateways
 
 | Opção | Como funciona | Observação |
 |---|---|---|
@@ -179,7 +254,7 @@ interface PaymentProvider {
 
 Assim, trocar de gateway no futuro significa escrever uma nova implementação, sem mexer no checkout.
 
-> ⚠️ Confirmar com um contador como emitir nota fiscal da comissão. Cada fotógrafo é responsável pela nota da própria venda.
+> ⚠️ Antes de lançar o SaaS, confirmar com um contador como emitir a nota fiscal da comissão e qual regime faz sentido (MEI, Simples). Cada fotógrafo é responsável pela nota da própria venda.
 
 ---
 
@@ -220,7 +295,8 @@ Cada fase termina com algo **funcionando e testado**. Não começar a próxima s
 
 ### Fase 0: Produto real com um fotógrafo *(próxima)*
 - [x] Correções de segurança (webhook, checkout, upload direto)
-- [ ] Integração PIX real com a EFI (sandbox → produção)
+- [x] Integração PIX real com a EFI: código pronto e testado contra uma EFI falsa local
+- [ ] Testar no sandbox da EFI (com credenciais reais de homologação)
 - [ ] Deploy na Vercel
 - [ ] Vender as fotos de **um evento real**
 
@@ -294,6 +370,7 @@ npx skills add vercel-labs/agent-skills
 
 - [ ] **Gateway de split:** EFI ou Asaas? (testar os dois no sandbox)
 - [ ] **Comissão inicial:** 10%? 15%?
+- [ ] **Taxa do PIX:** descontada do fotógrafo ou absorvida pela plataforma?
 - [ ] **Nicho de lançamento:** só esportes ou também festas e formaturas?
 - [ ] **Retenção dos originais:** 30, 60 ou 90 dias?
 - [ ] **Nome e domínio** definitivos da plataforma
