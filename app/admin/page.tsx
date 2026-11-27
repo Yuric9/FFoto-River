@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import WebhookSetup from '@/components/WebhookSetup'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +15,7 @@ export default async function AdminPage() {
           + Novo evento
         </Link>
       </div>
+      <WebhookSetup />
       <div className="grid gap-4 max-w-2xl">
         {(rows || []).map((r: any) => (
           <div key={r.event_id} className="bg-zinc-900 border border-zinc-800 rounded p-4">

@@ -49,17 +49,32 @@ Você precisa de Node.js 18 ou mais novo, uma conta no Supabase e uma conta de d
    npm run dev
    ```
 
-### Webhook da EFI Pay
+### PIX com a EFI Pay
 
-Cadastre na EFI a URL do webhook **com o segredo** definido em `EFI_WEBHOOK_SECRET`:
+Sem as variáveis `EFI_*`, o checkout gera um **PIX simulado** para você testar as telas (em produção ele é bloqueado, a menos que `ALLOW_PIX_MOCK=true`). Para usar o PIX de verdade:
 
+1. Na [EFI](https://sejaefi.com.br), crie uma aplicação com a API PIX ativada, em **homologação** (sandbox) primeiro.
+2. Baixe o certificado `.p12` e salve em `certs/homologacao.p12` (a pasta `certs/` não vai para o GitHub).
+3. Preencha `EFI_CLIENT_ID`, `EFI_CLIENT_SECRET`, `EFI_PIX_KEY` e deixe `EFI_SANDBOX=true`.
+4. Rode `npm run dev` e faça uma compra. A página do PIX consulta a EFI a cada 4 segundos e libera as fotos quando o pagamento é confirmado, mesmo sem webhook.
+
+**Na Vercel**, não existe arquivo local: converta o certificado para base64 e cole em `EFI_CERTIFICATE_BASE64`:
+
+```bash
+base64 -w 0 certs/producao.p12
 ```
-https://SEU-SITE/api/webhooks/efi?hmac=SEU_EFI_WEBHOOK_SECRET&ignorar=
+
+(no macOS: `base64 -i certs/producao.p12`)
+
+**Webhook:** depois de publicar, defina `SITE_URL` e `EFI_WEBHOOK_SECRET` (mínimo de 32 caracteres) e clique em **Cadastrar webhook** no `/admin`. A URL cadastrada leva o segredo (`?hmac=...`), e o webhook sempre **consulta a cobrança na EFI** antes de liberar as fotos: ele não confia no que recebe.
+
+**Testar o webhook no modo simulado** (sem EFI), com o pedido criado no checkout:
+
+```bash
+curl -X POST "http://localhost:3000/api/webhooks/efi?hmac=SEU_SEGREDO" -H "Content-Type: application/json" -d '{"pix":[{"txid":"TXID_DO_PEDIDO","valor":"10.00"}]}'
 ```
 
-Sem o segredo certo, a rota responde 401. O `&ignorar=` existe porque a EFI acrescenta `/pix` no fim da URL. O pedido só é marcado como pago se o valor recebido for igual ao total do pedido.
-
-> O PIX ainda é simulado (`lib/payments.ts`). Em produção o checkout se recusa a gerar o PIX falso, a menos que `ALLOW_PIX_MOCK=true` esteja definido de propósito.
+O `TXID_DO_PEDIDO` é o id do pedido sem os hífens (coluna `pix_txid` da tabela `orders`).
 
 Nunca envie o arquivo `.env.local` nem os certificados da EFI Pay para o GitHub.
 
@@ -67,7 +82,8 @@ Nunca envie o arquivo `.env.local` nem os certificados da EFI Pay para o GitHub.
 
 ```
 app/          páginas e rotas de API (galeria, checkout, entrega, admin, webhook)
-lib/          Supabase (público e admin, só servidor), EFI Pay, preço e marca d'água
+lib/          Supabase (público e admin), EFI Pay (efi.ts, payments.ts), pedidos, preço e marca d'água
+components/   tela de pagamento PIX e configuração do webhook
 supabase/     migração do banco
 public/       logo e arquivos estáticos
 middleware.ts proteção do painel /admin

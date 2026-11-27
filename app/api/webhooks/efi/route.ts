@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { timingSafeEqual } from 'crypto'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { syncOrderPayment } from '@/lib/orders'
 
 // Webhook de PIX da EFI Pay.
 //
@@ -9,9 +10,8 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 // O "&ignorar=" é o truque indicado pela EFI: ela acrescenta "/pix" no fim da URL,
 // e assim o "/pix" vira valor do parâmetro "ignorar" em vez de estragar o segredo.
 //
-// Mesmo com o segredo, o pedido só é marcado como pago se o valor recebido bater
-// com o total do pedido e se ele ainda estiver pendente.
-// TODO (PIX real): consultar GET /v2/cob/{txid} na EFI para confirmar o pagamento.
+// Mesmo com o segredo, não confiamos no conteúdo recebido: para cada txid,
+// consultamos a cobrança direto na EFI (syncOrderPayment) antes de liberar as fotos.
 
 function secretIsValid(received: string | null) {
   const expected = process.env.EFI_WEBHOOK_SECRET
@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
 
     const { data: order } = await supabaseAdmin
       .from('orders')
-      .select('id, status, total_amount')
+      .select('id, status, total_amount, pix_txid')
       .eq('pix_txid', pix.txid)
       .single()
 
@@ -52,21 +52,13 @@ export async function POST(req: NextRequest) {
       console.warn('Webhook EFI: pedido não encontrado para txid', pix.txid)
       continue
     }
-    if (order.status !== 'pending') continue // já processado: ignora repetição
 
-    if (Number(pix.valor).toFixed(2) !== Number(order.total_amount).toFixed(2)) {
-      console.error('Webhook EFI: valor diferente do pedido', { txid: pix.txid, recebido: pix.valor, esperado: order.total_amount })
-      continue
-    }
-
-    const { error } = await supabaseAdmin
-      .from('orders')
-      .update({ status: 'paid', paid_at: new Date().toISOString() })
-      .eq('id', order.id)
-      .eq('status', 'pending')
-    if (error) {
-      console.error('Webhook EFI: falha ao atualizar pedido', error)
-      return NextResponse.json({ error: 'Falha ao atualizar pedido' }, { status: 500 })
+    try {
+      await syncOrderPayment(order, pix.valor)
+    } catch (err) {
+      console.error('Webhook EFI: erro ao confirmar pagamento', err)
+      // 500 faz a EFI tentar de novo mais tarde
+      return NextResponse.json({ error: 'Falha ao confirmar pagamento' }, { status: 500 })
     }
   }
 

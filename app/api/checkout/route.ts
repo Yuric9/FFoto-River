@@ -66,7 +66,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Não foi possível registrar as fotos do pedido.' }, { status: 500 })
     }
 
-    const pix = await createPixCharge(order.id, total, order.customer_name)
+    let pix
+    try {
+      pix = await createPixCharge(order.id, total)
+    } catch (err) {
+      console.error('Erro ao gerar PIX:', err)
+      await supabaseAdmin.from('orders').update({ status: 'cancelled' }).eq('id', order.id)
+      return NextResponse.json({ error: 'Não foi possível gerar o PIX agora. Tente novamente em instantes.' }, { status: 502 })
+    }
     await supabaseAdmin.from('orders').update({ pix_txid: pix.txid, pix_qrcode: pix.copiaECola }).eq('id', order.id)
 
     return NextResponse.json({ orderId: order.id, downloadToken: order.download_token, pix })
