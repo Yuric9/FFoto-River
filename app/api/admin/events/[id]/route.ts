@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const { data, error } = await supabaseAdmin.from('events').select('*').eq('id', params.id).single()

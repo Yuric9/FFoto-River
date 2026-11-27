@@ -1,11 +1,14 @@
 // Gera uma versão com marca d'água repetida, direto no navegador (canvas), sem precisar de servidor extra, biblioteca externa ou Edge Function.
-export async function applyWatermark(file: File, text = 'FFOTO RIVER'): Promise<Blob> {
+// A prévia também é reduzida (lado maior com até `maxSize` px): fica leve para a galeria
+// e não serve como substituta da foto original em alta resolução.
+export async function applyWatermark(file: File, text = 'FFOTO RIVER', maxSize = 1600): Promise<Blob> {
   const img = await loadImage(file)
+  const scale = Math.min(1, maxSize / Math.max(img.width, img.height))
   const canvas = document.createElement('canvas')
-  canvas.width = img.width
-  canvas.height = img.height
+  canvas.width = Math.round(img.width * scale)
+  canvas.height = Math.round(img.height * scale)
   const ctx = canvas.getContext('2d')!
-  ctx.drawImage(img, 0, 0)
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
 
   ctx.save()
   ctx.globalAlpha = 0.25
@@ -31,8 +34,9 @@ export async function applyWatermark(file: File, text = 'FFOTO RIVER'): Promise<
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image()
-    img.onload = () => resolve(img)
+    const url = URL.createObjectURL(file)
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img) }
     img.onerror = reject
-    img.src = URL.createObjectURL(file)
+    img.src = url
   })
 }

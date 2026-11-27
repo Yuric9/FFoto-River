@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { applyWatermark } from '@/lib/watermark'
+import { supabase } from '@/lib/supabase'
 
 type Status = 'pendente' | 'enviando' | 'ok' | 'erro'
 
@@ -22,15 +23,34 @@ export default function UploadFotosPage({ params }: { params: { id: string } }) 
       if (files[i].status === 'ok') continue
       setFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'enviando' } : f))
       try {
-        const preview = await applyWatermark(files[i].file)
-        const form = new FormData()
-        form.append('event_id', params.id)
-        form.append('filename', files[i].file.name)
-        form.append('original', files[i].file)
-        form.append('preview', preview, 'preview.jpg')
-        const res = await fetch('/api/admin/photos', { method: 'POST', body: form })
-        const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Falha no upload')
+        const file = files[i].file
+        const preview = await applyWatermark(file)
+
+        // 1. Pede ao servidor URLs assinadas para enviar os arquivos
+        const res1 = await fetch('/api/admin/photos/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event_id: params.id, filename: file.name })
+        })
+        const urls = await res1.json()
+        if (!res1.ok) throw new Error(urls.error || 'Falha ao preparar upload')
+
+        // 2. Envia original e prévia direto para o Supabase Storage
+        const up1 = await supabase.storage.from('originais')
+          .uploadToSignedUrl(urls.original.path, urls.original.token, file, { contentType: file.type })
+        if (up1.error) throw new Error(`Original: ${up1.error.message}`)
+        const up2 = await supabase.storage.from('provas')
+          .uploadToSignedUrl(urls.preview.path, urls.preview.token, preview, { contentType: 'image/jpeg' })
+        if (up2.error) throw new Error(`Prévia: ${up2.error.message}`)
+
+        // 3. Registra a foto no banco
+        const res2 = await fetch('/api/admin/photos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ event_id: params.id, filename: file.name, original_path: urls.original.path, preview_path: urls.preview.path })
+        })
+        const data = await res2.json()
+        if (!res2.ok) throw new Error(data.error || 'Falha ao registrar foto')
         setFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'ok' } : f))
       } catch (err: any) {
         setFiles(prev => prev.map((f, idx) => idx === i ? { ...f, status: 'erro', error: err.message } : f))

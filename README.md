@@ -11,7 +11,7 @@ Plataforma para fotógrafos venderem fotos online. O cliente vê as fotos com ma
 - **Confirmação automática** do pagamento por webhook (`/api/webhooks/efi`)
 - **Entrega das fotos originais** por link individual (`/entrega/[token]`) depois que o pagamento é confirmado
 - **Painel de administração** em `/admin`, protegido por login simples
-- **Geração das prévias** com marca d'água em uma Edge Function do Supabase (`process-photo`)
+- **Geração das prévias** com marca d'água no navegador, na hora do upload (as fotos vão direto para o Supabase Storage)
 
 ## Como funciona a compra
 
@@ -44,16 +44,22 @@ Você precisa de Node.js 18 ou mais novo, uma conta no Supabase e uma conta de d
    ```
 2. Crie um projeto no Supabase e rode o arquivo `supabase/migrations/001_initial.sql` no SQL Editor. Confira em Storage se existem os buckets `originais` (privado) e `provas` (público).
 3. Copie `.env.example` para `.env.local` e preencha com as chaves do Supabase e da EFI Pay. Troque também `ADMIN_USER` e `ADMIN_PASSWORD`.
-4. Publique a função de geração de prévias:
-   ```bash
-   npx supabase login
-   npx supabase link --project-ref SEU_ID
-   npx supabase functions deploy process-photo --no-verify-jwt
-   ```
-5. Rode o projeto:
+4. Rode o projeto:
    ```bash
    npm run dev
    ```
+
+### Webhook da EFI Pay
+
+Cadastre na EFI a URL do webhook **com o segredo** definido em `EFI_WEBHOOK_SECRET`:
+
+```
+https://SEU-SITE/api/webhooks/efi?hmac=SEU_EFI_WEBHOOK_SECRET&ignorar=
+```
+
+Sem o segredo certo, a rota responde 401. O `&ignorar=` existe porque a EFI acrescenta `/pix` no fim da URL. O pedido só é marcado como pago se o valor recebido for igual ao total do pedido.
+
+> O PIX ainda é simulado (`lib/payments.ts`). Em produção o checkout se recusa a gerar o PIX falso, a menos que `ALLOW_PIX_MOCK=true` esteja definido de propósito.
 
 Nunca envie o arquivo `.env.local` nem os certificados da EFI Pay para o GitHub.
 
@@ -61,8 +67,8 @@ Nunca envie o arquivo `.env.local` nem os certificados da EFI Pay para o GitHub.
 
 ```
 app/          páginas e rotas de API (galeria, checkout, entrega, admin, webhook)
-lib/          integração com Supabase e com a EFI Pay
-supabase/     migração do banco e Edge Function
+lib/          Supabase (público e admin, só servidor), EFI Pay, preço e marca d'água
+supabase/     migração do banco
 public/       logo e arquivos estáticos
 middleware.ts proteção do painel /admin
 ```
