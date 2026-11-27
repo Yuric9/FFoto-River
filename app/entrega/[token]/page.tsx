@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { isPixSimulado } from '@/lib/payments'
+import { presignDownload } from '@/lib/storage'
 import PixPayment from '@/components/PixPayment'
 
 export const dynamic = 'force-dynamic'
@@ -19,8 +20,8 @@ export default async function DeliveryPage({ params }: { params: { token: string
   if (order.status !== 'paid') return <div className="min-h-screen flex flex-col items-center justify-center p-10 text-center gap-2"><h1 className="text-xl font-black">Pedido não pago</h1><p className="text-zinc-400 max-w-sm">Este pedido expirou ou foi cancelado. Volte à galeria para fazer um novo pedido.</p></div>
   const items: any[] = order.order_items || []
   const links = await Promise.all(items.map(async (item: any) => {
-    const { data } = await supabaseAdmin.storage.from('originais').createSignedUrl(item.photos.original_path, 60 * 60)
-    return { filename: item.photos.filename, url: data?.signedUrl }
+    const url = await presignDownload(item.photos.original_path, item.photos.filename)
+    return { filename: item.photos.filename, url }
   }))
   return <div className="min-h-screen p-6"><h1 className="text-2xl font-black mb-2">Suas fotos, {order.customer_name} 🎉</h1><p className="text-zinc-400 mb-6">{links.length} fotos em alta resolução. Os links expiram em 1 hora.</p><div className="grid gap-3 max-w-md">{links.map((l, i) => <a key={i} href={l.url} download className="bg-[#C6FF00] text-black font-bold px-4 py-3 rounded text-center">Baixar {l.filename}</a>)}</div></div>
 }

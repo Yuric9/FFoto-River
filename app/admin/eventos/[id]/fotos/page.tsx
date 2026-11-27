@@ -1,9 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { applyWatermark } from '@/lib/watermark'
-import { supabase } from '@/lib/supabase'
 
 type Status = 'pendente' | 'enviando' | 'ok' | 'erro'
+
+async function putFile(url: string, body: Blob, contentType: string, label: string) {
+  const res = await fetch(url, { method: 'PUT', body, headers: { 'Content-Type': contentType } })
+  if (!res.ok) throw new Error(`${label}: falha no envio (HTTP ${res.status})`)
+}
 
 export default function UploadFotosPage({ params }: { params: { id: string } }) {
   const [eventTitle, setEventTitle] = useState('')
@@ -30,18 +34,14 @@ export default function UploadFotosPage({ params }: { params: { id: string } }) 
         const res1 = await fetch('/api/admin/photos/upload-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ event_id: params.id, filename: file.name })
+          body: JSON.stringify({ event_id: params.id, filename: file.name, content_type: file.type })
         })
         const urls = await res1.json()
         if (!res1.ok) throw new Error(urls.error || 'Falha ao preparar upload')
 
-        // 2. Envia original e prévia direto para o Supabase Storage
-        const up1 = await supabase.storage.from('originais')
-          .uploadToSignedUrl(urls.original.path, urls.original.token, file, { contentType: file.type })
-        if (up1.error) throw new Error(`Original: ${up1.error.message}`)
-        const up2 = await supabase.storage.from('provas')
-          .uploadToSignedUrl(urls.preview.path, urls.preview.token, preview, { contentType: 'image/jpeg' })
-        if (up2.error) throw new Error(`Prévia: ${up2.error.message}`)
+        // 2. Envia original e prévia direto para o Cloudflare R2
+        await putFile(urls.original.url, file, urls.original.contentType, 'Original')
+        await putFile(urls.preview.url, preview, urls.preview.contentType, 'Prévia')
 
         // 3. Registra a foto no banco
         const res2 = await fetch('/api/admin/photos', {
